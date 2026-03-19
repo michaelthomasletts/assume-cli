@@ -1,3 +1,7 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
 """CLI entry point for assume-cli.
 
 Usage
@@ -9,8 +13,6 @@ subcommand runs.  They are forwarded verbatim to ``daemon _serve`` when
 starting the background daemon process so both sides share the same
 configuration.
 """
-
-__all__ = []
 
 import os
 import subprocess
