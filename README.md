@@ -28,10 +28,10 @@ assume is a CLI tool with a daemon for exposing automatically refreshed temporar
  Manage refreshable AWS credentials via a local daemon.                                                                                                                                                   
                                                                                                                                                                                                           
 ╭─ Options ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
-│ --config-dir                   -cd        PATH     Config directory. Default: /Users/michaelletts/.assume/configs                                                                                      │
+│ --config-dir                   -cd        PATH     Config directory. Default: ~/.assume/configs                                                                                      │
 │ --config-file-extension        -cfe       TEXT     Config file extension. Default: .yaml                                                                                                               │
 │ --socket-path                  -sp        PATH     UNIX socket path for daemon communication.                                                                                                          │
-│ --logging-path                 -lp        PATH     Daemon log file path. Default: /Users/michaelletts/.assume/logs/daemon.log                                                                          │
+│ --logging-path                 -lp        PATH     Daemon log file path. Default: ~/.assume/logs/daemon.log                                                                          │
 │ --max-unix-socket-connections  -musc      INTEGER  Max pending socket connections.                                                                                                                     │
 │ --install-completion                               Install completion for the current shell.                                                                                                           │
 │ --show-completion                                  Show completion for the current shell, to copy it or customize the installation.                                                                    │
