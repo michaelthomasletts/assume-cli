@@ -61,9 +61,7 @@ Next, start the daemon.
 assume daemon start
 ```
 
-Now, you can perform all kinds of operations.
-
-You can export your automatically refreshed temporary AWS credenitals to stdout.
+Now you can export your automatically refreshed temporary AWS credenitals to stdout.
 
 ```bash
 assume export -n <your config name>
@@ -81,7 +79,7 @@ Or initialize a shell and run as many AWS commands as you want, for however long
 assume shell -n <your config name>
 ```
 
-If you have an existential identity crisis and forget who you are, fret not.
+If you have an existential crisis and forget who you are -- fret not, friend.
 
 ```bash
 assume whoami -n <your config name>
