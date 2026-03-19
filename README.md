@@ -14,6 +14,8 @@
 
 **ASSUME IS ACTIVELY UNDER DEVELOPMENT AND NOT YET READY FOR OFFICIAL RELEASE**
 
+**ACCORDINGLY, THIS REPOSITORY WILL CHANGE SUBSTANTIALLY UNTIL THE PROJECT REACHES A STABLE STATE AND IS OFFICIALLY RELEASED FOR USE**
+
 ## Description
 
 `assume` is a CLI tool with a daemon for exposing automatically refreshed temporary AWS credentials via [boto3-refresh-session](https://github.com/61418/boto3-refresh-session) to shells, SDKs, tools, and more. assume uses a UNIX domain socket with an in-memory session cache and a simple refresh loop.

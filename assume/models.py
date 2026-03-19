@@ -16,7 +16,7 @@ __all__ = [
     "STSModel",
 ]
 
-from typing import Any, Dict, Literal, Optional
+from typing import Any, Dict, List, Literal, Optional
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict
@@ -47,16 +47,16 @@ class AssumeRoleModel(_BaseModel):
 
     RoleArn: str
     RoleSessionName: Optional[str] = None
-    PolicyArns: Optional[list[str]] = None
+    PolicyArns: Optional[List[str]] = None
     Policy: Optional[str] = None
     DurationSeconds: Optional[int] = None
     ExternalId: Optional[str] = None
     SerialNumber: Optional[str] = None
     TokenCode: Optional[str] = None
-    Tags: Optional[list[TagModel]] = None
-    TransitiveTagKeys: Optional[list[str]] = None
+    Tags: Optional[List[TagModel]] = None
+    TransitiveTagKeys: Optional[List[str]] = None
     SourceIdentity: Optional[str] = None
-    ProvidedContexts: Optional[list[ProvidedContextModel]] = None
+    ProvidedContexts: Optional[List[ProvidedContextModel]] = None
 
 
 class STSModel(_BaseModel):
@@ -76,7 +76,7 @@ class STSModel(_BaseModel):
 class MFAModel(_BaseModel):
     """Model for AWS STS MFA parameters."""
 
-    command: str | list[str]
+    command: str | List[str]
     timeout: Optional[int] = 30
 
 
