@@ -59,16 +59,6 @@ def _callback(
         help=(f"Config directory. Default: {Constants._config_dir}"),
         show_default=False,
     ),
-    config_file_extension: Optional[str] = typer.Option(
-        None,
-        "--config-file-extension",
-        "-cfe",
-        help=(
-            "Config file extension. "
-            f"Default: {Constants._config_file_extension}"
-        ),
-        show_default=False,
-    ),
     socket_path: Optional[Path] = typer.Option(
         None,
         "--socket-path",
@@ -92,12 +82,20 @@ def _callback(
         help="Max pending socket connections.",
         show_default=False,
     ),
+    max_daemon_cache_size: Optional[int] = typer.Option(
+        None,
+        "--max-daemon-cache-size",
+        "-mdcs",
+        help=(
+            "Max sessions retained in the daemon cache. "
+            f"Default: {Constants._max_daemon_cache_size}"
+        ),
+        show_default=False,
+    ),
 ) -> None:
     """elhaz — manage refreshable AWS credentials."""
     if config_dir is not None:
         state.constants.config_dir = config_dir
-    if config_file_extension is not None:
-        state.constants.config_file_extension = config_file_extension
     if socket_path is not None:
         state.constants.socket_path = socket_path
     if logging_path is not None:
@@ -106,6 +104,8 @@ def _callback(
         state.constants.max_unix_socket_connections = (
             max_unix_socket_connections
         )
+    if max_daemon_cache_size is not None:
+        state.constants.max_daemon_cache_size = max_daemon_cache_size
 
 
 def _fetch_credentials(name: str) -> dict:

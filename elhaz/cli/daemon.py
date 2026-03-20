@@ -111,10 +111,10 @@ def _daemon_subprocess_cmd() -> list[str]:
         str(c.daemon_logging_path),
         "--config-dir",
         str(c.config_dir),
-        "--config-file-extension",
-        c.config_file_extension,
         "--max-unix-socket-connections",
         str(c.max_unix_socket_connections),
+        "--max-daemon-cache-size",
+        str(c.max_daemon_cache_size),
         "daemon",
         "_serve",
     ]
@@ -316,7 +316,7 @@ def daemon_serve() -> None:
     _log = logging.getLogger(__name__)
 
     try:
-        service = DaemonService()
+        service = DaemonService(max_size=constants.max_daemon_cache_size)
         server = Server(constants, service)
         server.run()
     except Exception:

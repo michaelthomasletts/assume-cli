@@ -29,6 +29,9 @@ class Constants:
     max_unix_socket_connections : int
         The maximum number of pending Unix socket connections the daemon will
         allow in its listen backlog. Default is 5.
+    max_daemon_cache_size : int
+        The maximum number of sessions the daemon session cache will retain
+        before evicting the least recently used entry. Default is 10.
     """
 
     _config_dir: Path = Path.home() / ".elhaz/configs"
@@ -36,6 +39,7 @@ class Constants:
     _socket_path: Path = Path.home() / ".elhaz" / "sock" / "daemon.sock"
     _daemon_logging_path: Path = Path.home() / ".elhaz/logs/daemon.log"
     _max_unix_socket_connections: int = 5
+    _max_daemon_cache_size: int = 10
 
     @property
     def config_dir(self) -> Path:
@@ -50,18 +54,6 @@ class Constants:
     @property
     def config_file_extension(self) -> str:
         return self._config_file_extension
-
-    @config_file_extension.setter
-    def config_file_extension(self, value: str) -> None:
-        if (
-            not value
-            or not isinstance(value, str)
-            or not value.startswith(".")
-        ):
-            raise ElhazValidationError(
-                f"Invalid config file extension: '{value}'"
-            )
-        self._config_file_extension = value
 
     @property
     def socket_path(self) -> Path:
@@ -96,3 +88,15 @@ class Constants:
                 f"Invalid daemon logging path: '{value}'"
             )
         self._daemon_logging_path = value
+
+    @property
+    def max_daemon_cache_size(self) -> int:
+        return self._max_daemon_cache_size
+
+    @max_daemon_cache_size.setter
+    def max_daemon_cache_size(self, value: int) -> None:
+        if not isinstance(value, int) or value < 1:
+            raise ElhazValidationError(
+                f"Invalid max daemon cache size: '{value}'"
+            )
+        self._max_daemon_cache_size = value
