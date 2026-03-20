@@ -6,7 +6,9 @@
 
 import os
 import subprocess
-from typing import Optional
+from dataclasses import dataclass
+from dataclasses import field as dc_field
+from typing import Literal, Optional
 
 import typer
 
@@ -33,49 +35,190 @@ app = typer.Typer(
     no_args_is_help=True,
 )
 
+FieldKind = Literal["scalar", "str_list", "model_list"]
 
-# (key, prompt label, cast, hint)
-_ASSUME_ROLE_OPTIONAL: list[tuple[str, str, type, str | None]] = [
-    ("RoleSessionName", "RoleSessionName", str, None),
-    ("DurationSeconds", "DurationSeconds", int, "seconds"),
-    ("ExternalId", "ExternalId", str, None),
-    ("SerialNumber", "SerialNumber (MFA device ARN)", str, None),
-    ("TokenCode", "TokenCode (MFA token)", str, None),
-    ("SourceIdentity", "SourceIdentity", str, None),
-    ("Policy", "Inline session policy (JSON string)", str, None),
+
+@dataclass
+class FieldDescriptor:
+    """Descriptor for a single interactive config field.
+
+    Parameters
+    ----------
+    key : str
+        Dict key / Pydantic field name.
+    label : str
+        Human-readable prompt label.
+    kind : FieldKind
+        How to collect the value: ``scalar``, ``str_list``, or
+        ``model_list``.
+    cast : type
+        Cast function applied to scalar input. Ignored for list kinds.
+    hint : str or None
+        Inline hint appended to the scalar prompt (e.g. ``"seconds"``).
+    sub_fields : list[FieldDescriptor]
+        Sub-field descriptors for ``model_list`` kinds.
+    """
+
+    key: str
+    label: str
+    kind: FieldKind = "scalar"
+    cast: type = str
+    hint: str | None = None
+    sub_fields: list["FieldDescriptor"] = dc_field(default_factory=list)
+
+
+_ASSUME_ROLE_OPTIONAL: list[FieldDescriptor] = [
+    FieldDescriptor("RoleSessionName", "RoleSessionName"),
+    FieldDescriptor(
+        "DurationSeconds", "DurationSeconds", cast=int, hint="seconds"
+    ),
+    FieldDescriptor("ExternalId", "ExternalId"),
+    FieldDescriptor("SerialNumber", "SerialNumber (MFA device ARN)"),
+    FieldDescriptor("TokenCode", "TokenCode (MFA token)"),
+    FieldDescriptor("SourceIdentity", "SourceIdentity"),
+    FieldDescriptor("Policy", "Inline session policy (JSON string)"),
+    FieldDescriptor(
+        "PolicyArns", "PolicyArns", kind="str_list", hint="policy ARN"
+    ),
+    FieldDescriptor(
+        "Tags",
+        "Tags",
+        kind="model_list",
+        sub_fields=[
+            FieldDescriptor("Key", "Key"),
+            FieldDescriptor("Value", "Value"),
+        ],
+    ),
+    FieldDescriptor(
+        "TransitiveTagKeys",
+        "TransitiveTagKeys",
+        kind="str_list",
+        hint="tag key",
+    ),
+    FieldDescriptor(
+        "ProvidedContexts",
+        "ProvidedContexts",
+        kind="model_list",
+        sub_fields=[
+            FieldDescriptor("ProviderArn", "ProviderArn"),
+            FieldDescriptor("ContextAssertion", "ContextAssertion"),
+        ],
+    ),
 ]
 
-_STS_FIELDS: list[tuple[str, str, type, str | None]] = [
-    ("region_name", "Region name", str, None),
-    ("api_version", "API version", str, None),
-    ("use_ssl", "Use SSL?", bool, None),
-    ("verify", "Verify SSL?", bool, None),
-    ("endpoint_url", "STS endpoint URL", str, None),
-    ("aws_access_key_id", "AWS access key ID", str, None),
-    ("aws_secret_access_key", "AWS secret access key", str, None),
-    ("aws_session_token", "AWS session token", str, None),
-    ("aws_account_id", "AWS account ID", str, None),
+_STS_FIELDS: list[FieldDescriptor] = [
+    FieldDescriptor("region_name", "Region name"),
+    FieldDescriptor("api_version", "API version"),
+    FieldDescriptor("use_ssl", "Use SSL?", cast=bool),
+    FieldDescriptor("verify", "Verify SSL?", cast=bool),
+    FieldDescriptor("endpoint_url", "STS endpoint URL"),
+    FieldDescriptor("aws_access_key_id", "AWS access key ID"),
+    FieldDescriptor("aws_secret_access_key", "AWS secret access key"),
+    FieldDescriptor("aws_session_token", "AWS session token"),
+    FieldDescriptor("aws_account_id", "AWS account ID"),
 ]
 
-_SESSION_FIELDS: list[tuple[str, str, type, str | None]] = [
-    ("region_name", "Region name", str, None),
-    ("profile_name", "AWS profile name", str, None),
-    ("aws_account_id", "AWS account ID", str, None),
-    ("aws_access_key_id", "AWS access key ID", str, None),
-    ("aws_secret_access_key", "AWS secret access key", str, None),
-    ("aws_session_token", "AWS session token", str, None),
+_SESSION_FIELDS: list[FieldDescriptor] = [
+    FieldDescriptor("region_name", "Region name"),
+    FieldDescriptor("profile_name", "AWS profile name"),
+    FieldDescriptor("aws_account_id", "AWS account ID"),
+    FieldDescriptor("aws_access_key_id", "AWS access key ID"),
+    FieldDescriptor("aws_secret_access_key", "AWS secret access key"),
+    FieldDescriptor("aws_session_token", "AWS session token"),
 ]
+
+
+def _collect_str_list(
+    descriptor: FieldDescriptor,
+    existing: list[str] | None = None,
+) -> list[str] | None:
+    """Interactively collect a list of strings for *descriptor*.
+
+    Parameters
+    ----------
+    descriptor : FieldDescriptor
+        Field being collected.
+    existing : list[str] or None, optional
+        Current values shown when updating a config.
+
+    Returns
+    -------
+    list[str] or None
+        Collected items, or None if the user entered nothing.
+    """
+
+    if existing:
+        typer.echo(f"  Current {descriptor.label}: {existing}")
+        if not ask_yes_no(
+            f"  Replace existing {descriptor.label}?", default=False
+        ):
+            return existing
+
+    hint = f" ({descriptor.hint})" if descriptor.hint else ""
+    typer.echo(f"  Enter {descriptor.label}{hint} — empty line to finish:")
+    items: list[str] = []
+    i = 1
+    while True:
+        val = ask_text(f"  [{i}]:", default="")
+        if not val:
+            break
+        items.append(val)
+        i += 1
+    return items or None
+
+
+def _collect_model_list(
+    descriptor: FieldDescriptor,
+    existing: list[dict] | None = None,
+) -> list[dict] | None:
+    """Interactively collect a list of sub-field dicts for *descriptor*.
+
+    Parameters
+    ----------
+    descriptor : FieldDescriptor
+        Field being collected. ``sub_fields`` must be non-empty.
+    existing : list[dict] or None, optional
+        Current values shown when updating a config.
+
+    Returns
+    -------
+    list[dict] or None
+        Collected items, or None if the user skipped.
+    """
+
+    if existing:
+        typer.echo(f"  Current {descriptor.label}:")
+        for entry in existing:
+            typer.echo(f"    {entry}")
+        if not ask_yes_no(
+            f"  Replace existing {descriptor.label}?", default=False
+        ):
+            return existing
+
+    items: list[dict] = []
+    while True:
+        entry: dict = {}
+        typer.echo(f"  New {descriptor.label} item:")
+        for sub in descriptor.sub_fields:
+            val = ask_text(f"    {sub.label} (required):", required=True)
+            entry[sub.key] = val
+        items.append(entry)
+        if not ask_yes_no(
+            f"  Add another {descriptor.label} item?", default=False
+        ):
+            break
+    return items or None
 
 
 def _collect_optional(
-    fields: list[tuple[str, str, type, str | None]],
+    fields: list[FieldDescriptor],
     existing: dict | None = None,
 ) -> dict:
     """Prompt for a list of optional fields, skipping blanks.
 
     Parameters
     ----------
-    fields : list of (key, label, cast, hint)
+    fields : list[FieldDescriptor]
         Field descriptors.
     existing : dict or None, optional
         Pre-populate prompts with existing values.
@@ -88,19 +231,31 @@ def _collect_optional(
 
     result: dict = {}
     existing = existing or {}
-    for key, label, cast, hint in fields:
-        default = str(existing.get(key, ""))
-        suffix = f" ({hint})" if hint else " (optional — Enter to skip)"
-        text = ask_text(f"{label}{suffix}:", default=default)
-        if text:
-            try:
-                result[key] = cast(text)
-            except (ValueError, TypeError):
-                typer.secho(
-                    f"  Invalid value for {key!r}; skipping.",
-                    fg=typer.colors.YELLOW,
-                    err=True,
-                )
+    for desc in fields:
+        if desc.kind == "scalar":
+            default = str(existing.get(desc.key, ""))
+            skip = " (optional — Enter to skip)"
+            suffix = f" ({desc.hint})" if desc.hint else skip
+            text = ask_text(f"{desc.label}{suffix}:", default=default)
+            if text:
+                try:
+                    result[desc.key] = desc.cast(text)
+                except (ValueError, TypeError):
+                    typer.secho(
+                        f"  Invalid value for {desc.key!r}; skipping.",
+                        fg=typer.colors.YELLOW,
+                        err=True,
+                    )
+        elif desc.kind == "str_list":
+            if ask_yes_no(f"Configure {desc.label}?", default=False):
+                collected = _collect_str_list(desc, existing.get(desc.key))
+                if collected:
+                    result[desc.key] = collected
+        elif desc.kind == "model_list":
+            if ask_yes_no(f"Configure {desc.label}?", default=False):
+                collected = _collect_model_list(desc, existing.get(desc.key))
+                if collected:
+                    result[desc.key] = collected
     return result
 
 

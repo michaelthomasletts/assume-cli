@@ -383,9 +383,7 @@ class Server:
                 f"Could not probe socket at {path!r}: {exc}"
             ) from exc
         else:
-            raise ElhazDaemonError(
-                f"A daemon is already running at {path!r}."
-            )
+            raise ElhazDaemonError(f"A daemon is already running at {path!r}.")
         finally:
             probe.close()
 
