@@ -9,54 +9,63 @@ elhaz
 
 **Maintainers:** `61418 <https://61418.io>`_
 
-Description
------------
+What is elhaz?
+--------------
 
-elhaz is a CLI tool and daemon for managing automatically refreshed temporary
-AWS credentials via `boto3-refresh-session <https://github.com/61418/boto3-refresh-session>`_.
+elhaz is a CLI tool for managing and reusing temporary AWS credentials locally.
 
-It exposes credentials to shells, SDKs, CLIs, scripts, and other tools using
-a UNIX domain socket with an in-memory session cache and a threaded refresh
-loop.
+It creates one AWS session per :ref:`config <config>`, keeps it alive, refreshes temporary AWS credentials automatically, and makes those credentials available across shells, scripts, SDKs, and tools.
 
-Why this Exists
+Instead of repeatedly assuming roles or re-running credential processes, elhaz maintains a single refreshable session per role and reuses it across your workflow.
+
+It provides a simple interface:
+
+- ``elhaz exec`` to run one-off commands with credentials
+- ``elhaz shell`` for an interactive environment
+- ``elhaz export`` for environment variables or integration with other tools
+- ``elhaz whoami`` to inspect the active identity
+
+Under the hood, elhaz runs a local daemon that caches sessions, refreshes credentials before expiration, and serves them instantly to any local consumer.
+
+The result is a consistent, low-friction way to work with multiple assumed AWS roles.
+
+
+Why this exists
 ---------------
 
-Temporary AWS credentials expire.
-Managing that expiration manually — or delegating it to individual tools —
-leads to redundant session creation, repeated STS calls, and credentials that
-silently expire mid-task.
+Working with AWS credentials locally is often fragmented and repetitive.
 
-elhaz solves this by running a single, long-lived daemon process on your local
-machine.
-The daemon holds a bounded LRU cache of active AWS sessions, each backed by
-`boto3-refresh-session <https://github.com/61418/boto3-refresh-session>`_,
-which automatically refreshes credentials before they expire.
-The CLI acts as the control plane: starting and stopping the daemon, adding
-and removing sessions, and retrieving credentials in multiple formats.
+- Each tool manages credentials differently
+- Temporary credentials are fetched multiple times across processes
+- Sessions expire unpredictably
+- Switching between roles requires constant reconfiguration
 
-This means:
+AWS provides primitives for credential management, but it does not coordinate them across your local environment.
 
-- Credentials refresh silently in the background.
-- Multiple IAM roles can be active simultaneously.
-- Any shell, SDK, script, or tool can consume credentials without knowing
-  about the daemon.
+elhaz fills that gap.
+
+It introduces a single local authority for credentials:
+
+- One session per configuration
+- Automatic refresh before expiration
+- Shared across shells, scripts, and tools
+- No repeated STS calls for the same role
+
+This allows you to work with multiple IAM roles without thinking about credential lifecycles.
+
 
 Design
 ------
 
-elhaz separates concerns into three layers:
+elhaz consists of three components:
 
-- **Config**: Named YAML files stored in ``~/.elhaz/configs/``, each
-  representing the parameters needed to initialize an AWS session via
-  boto3-refresh-session.
-- **Daemon**: A background process that holds a bounded LRU cache of active
-  sessions and serves credential requests over a UNIX domain socket.
-- **CLI**: A Typer-based command-line interface that acts as the control plane
-  for the daemon and a consumer of its credentials.
+- **Config** — Named YAML configurations stored in ``~/.elhaz/configs/``
+- **Daemon** — A local process that manages and refreshes sessions
+- **CLI** — A command-line interface for interacting with configurations and credentials
 
-Communication between the CLI and the daemon uses a simple JSON
-request/response protocol over the socket — one request per connection.
+The CLI communicates with the daemon over a UNIX domain socket using a simple request/response protocol.
+
+Most users do not need to think about these components directly — they exist to make credential management reliable and transparent.
 
 .. toctree::
    :maxdepth: 1
