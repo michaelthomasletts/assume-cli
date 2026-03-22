@@ -205,7 +205,7 @@ def test_invalid_action_returns_400(running_server):
 
     response = ResponseModel.model_validate_json(raw.rstrip())
     assert response.ok is False
-    assert response.error.code == 400
+    assert response.error.code == 400  # type: ignore[attr-defined]
 
 
 def test_missing_payload_config_returns_400(running_server):
@@ -213,7 +213,7 @@ def test_missing_payload_config_returns_400(running_server):
     with Client(constants) as client:
         response = client.send("add", {})
     assert response.ok is False
-    assert response.error.code == 400
+    assert response.error.code == 400  # type: ignore[attr-defined]
 
 
 def test_not_found_returns_404(running_server):
@@ -221,7 +221,7 @@ def test_not_found_returns_404(running_server):
     with Client(constants) as client:
         response = client.send("credentials", {"config": "ghost"})
     assert response.ok is False
-    assert response.error.code == 404
+    assert response.error.code == 404  # type: ignore[attr-defined]
 
 
 def test_remove_not_found_returns_404(running_server):
@@ -229,7 +229,7 @@ def test_remove_not_found_returns_404(running_server):
     with Client(constants) as client:
         response = client.send("remove", {"config": "ghost"})
     assert response.ok is False
-    assert response.error.code == 404
+    assert response.error.code == 404  # type: ignore[attr-defined]
 
 
 def test_server_continues_after_error(running_server):
