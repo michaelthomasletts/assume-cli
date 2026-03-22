@@ -26,8 +26,27 @@ keywords = [
     "sts",
     "refresh",
 ]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Information Technology",
+    "Intended Audience :: System Administrators",
+    "License :: OSI Approved :: Mozilla Public License 2.0 (MPL 2.0)",
+    "Natural Language :: English",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Security",
+    "Topic :: Terminals",
+    "Topic :: Utilities",   
+]
 
 [project.urls]
+Changelog = "https://github.com/61418/elhaz/blob/main/CHANGELOG.md"
 Documentation = "https://61418.io/elhaz"
 Issues = "https://github.com/michaelthomasletts/elhaz/issues"
 Repository = "https://github.com/michaelthomasletts/elhaz"
