@@ -30,6 +30,13 @@
     />
   </a>
 
+  <a href="https://github.com/61418/elhaz/actions/workflows/codeql.yml">
+    <img 
+      src="https://img.shields.io/github/actions/workflow/status/61418/elhaz/codeql.yml?logo=github&color=7d8450&label=CodeQL&labelColor=%23474749" 
+      alt="codeql"
+    />
+  </a>
+
   <a href="https://github.com/61418/elhaz/commits/main">
     <img 
       src="https://img.shields.io/github/last-commit/61418/elhaz?logo=github&color=7d8450&label=Last%20Commit&labelColor=%23474749" 
