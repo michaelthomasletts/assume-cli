@@ -15,7 +15,7 @@ Ideally, config creation should be a one-time investment in order to avoid drift
 Each config has a unique namespace. Although two config objects may have identical configurations, they cannot share the same config name. 
 
 What does a config contain?
---------------------------
+---------------------------
 
 A valid config can contain five objects:
 
