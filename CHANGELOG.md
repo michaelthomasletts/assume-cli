@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.5.1](https://github.com/61418/elhaz/compare/v0.5.0...v0.5.1) (2026-04-16)
+
+
+### Documentation
+
+* Adding links to SSO docs ([5814f71](https://github.com/61418/elhaz/commit/5814f714c29e88e96b7038bbc75e7529ed2830ed))
+* Adding links to SSO docs ([9e65ed4](https://github.com/61418/elhaz/commit/9e65ed46a201dfcb23d111ee97549e9ba58ea34c))
+
 ## [0.5.0](https://github.com/61418/elhaz/compare/v0.4.2...v0.5.0) (2026-04-15)
 
 
